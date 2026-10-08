@@ -120,12 +120,25 @@ class FunctionInstance:
                 "processed",
             )
 
+            latency_ms = (
+                time.monotonic() - order.created_at
+            ) * 1000
+
+            self.metrics.record_latency(
+                self.workspace.id,
+                latency_ms,
+            )
+
             self.event_log.add(
                 self.workspace.id,
                 "ORDER_PROCESSED",
                 {
                     "instance_id": self.id,
                     "order_id": order.id,
+                    "latency_ms": round(
+                        latency_ms,
+                        2,
+                    ),
                 },
             )
 

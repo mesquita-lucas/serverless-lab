@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from uuid import uuid4
 
@@ -8,10 +9,14 @@ class Order:
     quantity: int
     unit_price: float
     id: str = ""
+    created_at: float = 0.0
 
     def __post_init__(self):
         if not self.id:
             self.id = str(uuid4())
+
+        if not self.created_at:
+            self.created_at = time.monotonic()
 
     @property
     def total(self):
