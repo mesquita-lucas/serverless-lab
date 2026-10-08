@@ -3,6 +3,7 @@ import math
 import time
 
 from app.faas.function_instance import FunctionInstance
+from app.faas.function_status import FunctionStatus
 
 class Autoscaler:
     def __init__(
@@ -17,7 +18,7 @@ class Autoscaler:
         self.metrics = metrics
         self.event_log = event_log
         self.instances = {}
-        self.running = {}
+        self.backlog_per_instance = 10
 
     def get_instances(self, workspace_id: str):
         if workspace_id not in self.instances:
@@ -25,18 +26,53 @@ class Autoscaler:
 
         return self.instances[workspace_id]
 
+    def count_by_status(
+        self,
+        workspace_id: str,
+        status: FunctionStatus,
+    ):
+        return sum(
+            1
+            for instance in self.get_instances(workspace_id)
+            if instance.status == status
+        )
+
     async def scale(self, workspace):
         instances = self.get_instances(workspace.id)
         queue_size = self.queue.size(workspace.id)
 
-        desired = min(
-            workspace.config.max_instances,
-            math.ceil(queue_size / 10),
+        busy_instances = self.count_by_status(
+            workspace.id,
+            FunctionStatus.BUSY,
         )
 
-        desired = max(desired, 1 if queue_size else 0)
+        if queue_size == 0:
+            desired = len(instances)
+        else:
+            backlog_instances = math.ceil(
+                queue_size / self.backlog_per_instance
+            )
 
-        while len(instances) < desired:
+            desired = busy_instances + backlog_instances
+
+            desired = max(
+                desired,
+                1,
+            )
+
+            desired = min(
+                desired,
+                workspace.config.max_instances,
+            )
+
+        amount_to_create = max(
+            0,
+            desired - len(instances),
+        )
+
+        new_instances = []
+
+        for _ in range(amount_to_create):
             instance = FunctionInstance(
                 workspace,
                 self.database,
@@ -45,12 +81,21 @@ class Autoscaler:
             )
 
             instances.append(instance)
+            new_instances.append(instance)
 
         self.metrics.set(
             workspace.id,
             "active_instances",
             len(instances),
         )
+
+        if new_instances:
+            await asyncio.gather(
+                *[
+                    instance.initialize()
+                    for instance in new_instances
+                ]
+            )
 
     async def remove_idle(self, workspace):
         instances = self.get_instances(workspace.id)
@@ -61,16 +106,14 @@ class Autoscaler:
         for instance in instances:
             idle_time = now - instance.last_used
 
-            if (
-                not instance.busy
+            should_remove = (
+                instance.status == FunctionStatus.IDLE
                 and idle_time
                 > workspace.config.idle_timeout_seconds
-            ):
-                self.event_log.add(
-                    workspace.id,
-                    "FUNCTION_TERMINATED",
-                    {"instance_id": instance.id},
-                )
+            )
+
+            if should_remove:
+                instance.terminate()
             else:
                 remaining.append(instance)
 
@@ -85,3 +128,21 @@ class Autoscaler:
     async def tick(self, workspace):
         await self.scale(workspace)
         await self.remove_idle(workspace)
+
+    def clear_workspace(self, workspace_id: str):
+        instances = self.get_instances(workspace_id)
+
+        for instance in instances:
+            if instance.status != FunctionStatus.TERMINATED:
+                instance.terminate()
+
+        self.instances.pop(
+            workspace_id,
+            None,
+        )
+
+        self.metrics.set(
+            workspace_id,
+            "active_instances",
+            0,
+        )
