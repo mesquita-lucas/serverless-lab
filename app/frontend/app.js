@@ -112,9 +112,36 @@ function handleSocketMessage(data) {
         addLog(data.event || "EVENT", data.message || "");
     }
 
-    if (data.functions) {
-        renderFunctions(data.functions);
+    if (data.instances) {
+        renderFunctions(data.instances);
     }
+
+    if (Array.isArray(data.logs)) {
+        renderLogs(data.logs);
+    }
+}
+
+function renderLogs(logs) {
+    elements.logsContainer.innerHTML = "";
+
+    if (!logs.length) {
+        elements.logsContainer.innerHTML = `
+            <div class="log-empty">
+                Aguardando eventos...
+            </div>
+        `;
+        return;
+    }
+
+    logs
+        .slice()
+        .reverse()
+        .forEach((log) => {
+            addLog(
+                log.event || "EVENT",
+                JSON.stringify(log.data || {})
+            );
+        });
 }
 
 function updateMetrics(data) {
