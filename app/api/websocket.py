@@ -1,10 +1,16 @@
 import asyncio
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    WebSocket,
+    WebSocketDisconnect,
+)
 
 router = APIRouter()
 
-@router.websocket("/ws/{workspace_id}")
+@router.websocket(
+    "/ws/{workspace_id}"
+)
 async def workspace_socket(
     websocket: WebSocket,
     workspace_id: str,
@@ -16,11 +22,28 @@ async def workspace_socket(
     metrics = app.state.metrics
     event_log = app.state.event_log
     autoscaler = app.state.autoscaler
+    manager = app.state.workspace_manager
+
+    workspace = manager.get(
+        workspace_id
+    )
+
+    if not workspace:
+        await websocket.close(
+            code=1008
+        )
+        return
 
     try:
         while True:
-            instances = autoscaler.get_instances(
+            manager.get(
                 workspace_id
+            )
+
+            instances = (
+                autoscaler.get_instances(
+                    workspace_id
+                )
             )
 
             await websocket.send_json(
@@ -31,10 +54,14 @@ async def workspace_socket(
                     "instances": [
                         {
                             "id": instance.id,
+                            "status": (
+                                instance.status.value
+                            ),
                             "warm": instance.warm,
                             "busy": instance.busy,
                         }
-                        for instance in instances
+                        for instance
+                        in instances
                     ],
                     "logs": event_log.get(
                         workspace_id
@@ -42,7 +69,9 @@ async def workspace_socket(
                 }
             )
 
-            await asyncio.sleep(0.25)
+            await asyncio.sleep(
+                0.25
+            )
 
     except WebSocketDisconnect:
         pass
