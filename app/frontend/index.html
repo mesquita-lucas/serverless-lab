@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Lab</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main>
+        <header>
+            <h1>Serverless Lab</h1>
+            <p>Simulador educacional de arquitetura Serverless</p>
+        </header>
+
+        <section class="dashboard">
+            <div class="panel">
+                <h2>Carga</h2>
+
+                <button onclick="simulate(10)">10 pedidos</button>
+                <button onclick="simulate(100)">100 pedidos</button>
+                <button onclick="simulate(500)">500 pedidos</button>
+            </div>
+
+            <div class="panel">
+                <h2>Métricas</h2>
+
+                <p>Requests: <strong id="requests">0</strong></p>
+                <p>Fila: <strong id="queued">0</strong></p>
+                <p>Processados: <strong id="processed">0</strong></p>
+                <p>Functions: <strong id="instances">0</strong></p>
+                <p>Cold Starts: <strong id="cold-starts">0</strong></p>
+            </div>
+
+            <div class="panel">
+                <h2>Functions</h2>
+                <div id="functions"></div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Logs</h2>
+            <div id="logs"></div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

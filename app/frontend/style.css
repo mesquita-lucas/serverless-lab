@@ -1,0 +1,54 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f6f6f6;
+    color: #181818;
+}
+
+main {
+    max-width: 1200px;
+    margin: auto;
+    padding: 32px;
+}
+
+header {
+    margin-bottom: 32px;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.panel {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 16px;
+    margin: 4px;
+    cursor: pointer;
+}
+
+.function {
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 6px 0;
+}
+
+#logs {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+@media (max-width: 800px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+}
