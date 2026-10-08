@@ -4,46 +4,198 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serverless Lab</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <main>
-        <header>
-            <h1>Serverless Lab</h1>
-            <p>Simulador educacional de arquitetura Serverless</p>
+    <div class="app">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">λ</div>
+                <div>
+                    <h1>Serverless Lab</h1>
+                    <span>Simulador de arquitetura serverless</span>
+                </div>
+            </div>
+
+            <div class="workspace">
+                <span>WORKSPACE</span>
+                <strong id="workspace-id">Conectando...</strong>
+                <div id="connection-status" class="status offline">
+                    <span></span>
+                    Offline
+                </div>
+            </div>
         </header>
 
-        <section class="dashboard">
-            <div class="panel">
-                <h2>Carga</h2>
+        <main class="dashboard">
+            <section class="control-panel card">
+                <div class="section-title">
+                    <div>
+                        <span class="eyebrow">SIMULAÇÃO</span>
+                        <h2>Gerar carga</h2>
+                    </div>
+                </div>
 
-                <button onclick="simulate(10)">10 pedidos</button>
-                <button onclick="simulate(100)">100 pedidos</button>
-                <button onclick="simulate(500)">500 pedidos</button>
-            </div>
+                <div class="load-options">
+                    <button class="load-button" data-amount="10">
+                        <strong>10</strong>
+                        <span>pedidos</span>
+                    </button>
 
-            <div class="panel">
-                <h2>Métricas</h2>
+                    <button class="load-button" data-amount="100">
+                        <strong>100</strong>
+                        <span>pedidos</span>
+                    </button>
 
-                <p>Requests: <strong id="requests">0</strong></p>
-                <p>Fila: <strong id="queued">0</strong></p>
-                <p>Processados: <strong id="processed">0</strong></p>
-                <p>Functions: <strong id="instances">0</strong></p>
-                <p>Cold Starts: <strong id="cold-starts">0</strong></p>
-            </div>
+                    <button class="load-button" data-amount="500">
+                        <strong>500</strong>
+                        <span>pedidos</span>
+                    </button>
+                </div>
 
-            <div class="panel">
-                <h2>Functions</h2>
-                <div id="functions"></div>
-            </div>
-        </section>
+                <div class="custom-load">
+                    <label for="custom-amount">Carga personalizada</label>
+                    <div class="input-row">
+                        <input id="custom-amount" type="number" min="1" max="10000" value="50">
+                        <button id="simulate-custom" class="primary-button">Simular</button>
+                    </div>
+                </div>
 
-        <section class="panel">
-            <h2>Logs</h2>
-            <div id="logs"></div>
-        </section>
-    </main>
+                <div class="divider"></div>
 
-    <script src="/static/app.js"></script>
+                <div class="system-state">
+                    <span class="eyebrow">ESTADO DO SISTEMA</span>
+
+                    <div class="state-row">
+                        <span>Fila</span>
+                        <strong id="queue-state">0</strong>
+                    </div>
+
+                    <div class="state-row">
+                        <span>Functions ativas</span>
+                        <strong id="functions-state">0</strong>
+                    </div>
+
+                    <div class="state-row">
+                        <span>Processados</span>
+                        <strong id="processed-state">0</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="architecture card">
+                <div class="section-title">
+                    <div>
+                        <span class="eyebrow">ARQUITETURA</span>
+                        <h2>Fluxo de execução</h2>
+                    </div>
+                    <span class="live-indicator">
+                        <span></span>
+                        LIVE
+                    </span>
+                </div>
+
+                <div class="architecture-flow">
+                    <div class="architecture-node">
+                        <div class="node-icon">API</div>
+                        <strong>API</strong>
+                        <span>Entrada</span>
+                    </div>
+
+                    <div class="flow-arrow">→</div>
+
+                    <div class="architecture-node queue-node">
+                        <div class="node-icon">Q</div>
+                        <strong>Queue</strong>
+                        <span id="architecture-queue">0 eventos</span>
+                    </div>
+
+                    <div class="flow-arrow">→</div>
+
+                    <div class="architecture-node function-node">
+                        <div class="node-icon">λ</div>
+                        <strong>Functions</strong>
+                        <span id="architecture-functions">0 ativas</span>
+                    </div>
+
+                    <div class="flow-arrow">→</div>
+
+                    <div class="architecture-node">
+                        <div class="node-icon">DB</div>
+                        <strong>Database</strong>
+                        <span>Persistência</span>
+                    </div>
+                </div>
+
+                <div class="function-grid" id="function-grid">
+                    <div class="empty-state">
+                        Nenhuma Function ativa
+                    </div>
+                </div>
+            </section>
+
+            <section class="metrics card">
+                <div class="section-title">
+                    <div>
+                        <span class="eyebrow">OBSERVABILIDADE</span>
+                        <h2>Métricas</h2>
+                    </div>
+                </div>
+
+                <div class="metric-grid">
+                    <div class="metric">
+                        <span>Requests</span>
+                        <strong id="metric-requests">0</strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Na fila</span>
+                        <strong id="metric-queue">0</strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Processados</span>
+                        <strong id="metric-processed">0</strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Functions</span>
+                        <strong id="metric-functions">0</strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Cold starts</span>
+                        <strong id="metric-cold-starts">0</strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Latência</span>
+                        <strong id="metric-latency">0 ms</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="logs card">
+                <div class="section-title">
+                    <div>
+                        <span class="eyebrow">EVENTOS</span>
+                        <h2>Live logs</h2>
+                    </div>
+
+                    <button id="clear-logs" class="secondary-button">
+                        Limpar
+                    </button>
+                </div>
+
+                <div id="logs-container" class="logs-container">
+                    <div class="log-empty">
+                        Aguardando eventos...
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/app.js"></script>
 </body>
 </html>
